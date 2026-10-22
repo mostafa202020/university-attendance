@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block title %}Sessions{% endblock %}{% block content %}
+<div class="mb-4"><p class="text-primary fw-semibold text-uppercase small">Attendance management</p><h1 class="h3 fw-bold">Sessions</h1><p class="text-secondary">Student check-in is available only while the teacher's session window is open.</p></div>
+{% if not sessions %}<div class="card app-card"><div class="card-body p-4">No sessions have been created yet. Teacher: sign in to set up courses and sessions.</div></div>{% else %}
+<div class="row g-3">{% for s in sessions %}<div class="col-12 col-md-6"><div class="card app-card h-100"><div class="card-body p-4">
+<div class="d-flex justify-content-between"><span class="badge {{ 'text-bg-success' if s.is_open else 'text-bg-secondary' }}">{{ 'Open' if s.is_open else 'Closed' }}</span><span class="small text-secondary">{{ s.session_date.strftime('%d %b %Y') }}</span></div>
+<h2 class="h5 fw-bold mt-3">{{ s.title or s.group.course.name }}</h2><p class="text-secondary mb-3">{{ s.group.course.name }} · {{ s.group.name }} · {{ 'Course' if s.session_type=='COURSE' else 'Lab' }}</p>
+<a class="btn btn-primary" href="{{ url_for('checkin_page',session_id=s.id) }}">Student check-in</a>
+{% if teacher_logged_in %}<a class="btn btn-outline-secondary" href="{{ url_for('teacher_session',session_id=s.id) }}">Manage</a>{% endif %}
+</div></div></div>{% endfor %}</div>{% endif %}{% endblock %}
