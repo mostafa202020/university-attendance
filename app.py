@@ -37,21 +37,24 @@ def digest_code(code, secret):
 
 def create_app(test_config=None):
     app = Flask(__name__)
+
+    database_url = os.environ.get("DATABASE_URL", "sqlite:///attendance.db")
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace(
+            "postgres://", "postgresql+psycopg://", 1
+        )
+    elif database_url.startswith("postgresql://"):
+        database_url = database_url.replace(
+            "postgresql://", "postgresql+psycopg://", 1
+        )
+
     app.config.update(
         SECRET_KEY=os.environ.get("FLASK_SECRET_KEY", "local-dev-change-this-secret"),
-        database_url = os.environ.get(
-    "DATABASE_URL", "sqlite:///attendance.db"
-)
-   if database_url.startswith("postgres://"):
-    database_url = database_url.replace(
-        "postgres://", "postgresql+psycopg://", 1
-    )
-elif database_url.startswith("postgresql://"):
-    database_url = database_url.replace(
-        "postgresql://", "postgresql+psycopg://", 1
-    ),SQLALCHEMY_DATABASE_URI=database_url,
+        SQLALCHEMY_DATABASE_URI=database_url,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SESSION_CODE_SECRET=os.environ.get("SESSION_CODE_SECRET", "local-dev-change-this-code-secret"),
+        SESSION_CODE_SECRET=os.environ.get(
+            "SESSION_CODE_SECRET", "local-dev-change-this-code-secret"
+        ),
         TEACHER_USERNAME=os.environ.get("TEACHER_USERNAME", "teacher"),
         TEACHER_PASSWORD=os.environ.get("TEACHER_PASSWORD", "ChangeMe123!"),
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,
@@ -159,6 +162,10 @@ elif database_url.startswith("postgresql://"):
     @app.context_processor
     def inject_globals():
         return {"teacher_logged_in": bool(web_session.get("teacher_logged_in"))}
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}, 200
 
     @app.get("/")
     def index():

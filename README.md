@@ -1,76 +1,33 @@
-# Attendance Tracker — Complete Starter
+# Attendance Tracker — Render deployment
 
-A mobile-friendly Flask application for university attendance. Students check in using first name, surname, and a session code manually written on the board. No PIN or student account is required.
+## Deploy on Render
 
-## Features
+1. Push the contents of this folder to a GitHub repository.
+2. Create a Render PostgreSQL database.
+3. Create a Render Web Service connected to the repository.
+4. Set:
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `flask --app app init-db && gunicorn app:app`
+5. Add these environment variables in Render:
+   - `DATABASE_URL`: Render PostgreSQL **Internal Database URL**
+   - `TEACHER_USERNAME`: your chosen teacher login
+   - `TEACHER_PASSWORD`: a strong password
+   - `FLASK_SECRET_KEY`: a long random secret
+   - `SESSION_CODE_SECRET`: a different long random secret
 
-- Teacher login and protected administration routes.
-- Course and fixed group creation.
-- CSV/XLSX roster import.
-- Session creation with Course/Lab, date, manual code, opening and closing times.
-- All enrolled students initialized as absent when a session is created.
-- Server-side code/time/group validation and duplicate check-in rejection.
-- Teacher attendance dashboard and manual corrections with reasons.
-- Git-inspired commit/event history for check-ins and corrections.
-- Reports based on closed sessions and CSV export.
-- SQLite default; configure PostgreSQL using `DATABASE_URL`.
+Generate random secrets on your computer with:
+`python -c "import secrets; print(secrets.token_urlsafe(48))"`
 
-## Local setup — Windows PowerShell
+Use a separate generated value for each secret. Do not commit secrets to GitHub.
 
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+## Local run
 
-$env:FLASK_SECRET_KEY = "replace-with-a-long-random-secret"
-$env:SESSION_CODE_SECRET = "use-a-different-long-random-secret"
-$env:TEACHER_USERNAME = "teacher"
-$env:TEACHER_PASSWORD = "choose-a-strong-password"
+Install dependencies with `pip install -r requirements.txt`, then run
+`flask --app app init-db` and `flask --app app run`.
 
-flask --app app init-db
-flask --app app run --host 0.0.0.0 --port 5000
-```
+The `/health` endpoint returns `{"status":"ok"}` for a basic availability check.
 
-Open `http://127.0.0.1:5000`, select Teacher login, and use the username/password set in your environment. Create a course, add groups, import each group's roster, and create a session.
+## Important
 
-For testing, run:
-
-```powershell
-pip install pytest
-pytest -q
-```
-
-## Roster file
-
-CSV or XLSX first worksheet with headers such as:
-
-```csv
-first_name,surname
-Amine,Benali
-Sara,Mansouri
-Yacine,Haddad
-```
-
-The import screen previews the file and asks you to upload the same file again to confirm. Existing enrollments are preserved. Duplicate names are problematic because student identification uses first name and surname only; resolve duplicates in a group before the session.
-
-## Phone access on local Wi-Fi
-
-Find the teacher computer's local IPv4 address (for example, using `ipconfig`). Students on the same Wi-Fi can open:
-
-`http://TEACHER-LAN-IP:5000/check-in/SESSION_ID`
-
-Allow inbound access through the local firewall if needed. For internet access, deploy with HTTPS and a production WSGI server. Do not expose Flask's development server publicly.
-
-## Security and production checklist
-
-- Change all secrets and teacher credentials.
-- Use HTTPS, PostgreSQL, a production WSGI server, and database backups.
-- Add rate limiting for session-code guesses before public deployment.
-- Configure teacher session expiration and CSRF protection for production.
-- The default teacher login is intentionally simple; environment variables must be set before deployment.
-- Because there are no student accounts/PINs, name + shared session code cannot conclusively prove identity or prevent impersonation.
-- Store all times consistently. The starter treats server/session datetimes as server-local-naive timestamps and labels check-in display as UTC only when the server is configured to UTC. For production, configure the host to UTC or refactor to timezone-aware datetime handling.
-
-## Limitations
-
-This is a feature-complete prototype for the requested check-in workflow, not a security-audited production system. Add CSRF protection, rate limiting, better duplicate-name resolution, and a migration strategy before production use.
+This is a starter application and should receive security hardening and runtime testing
+before it is used for real student records. Keep the database URL and credentials secret.
